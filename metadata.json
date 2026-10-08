@@ -1,0 +1,6 @@
+{
+  "name": "Musics",
+  "description": "High-fidelity offline local music player with liquid glass UI, 60fps timeline, and audiophile metadata.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
