@@ -1,14 +1,19 @@
 package com.example.player
 
+import android.content.ComponentName
 import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
 import com.example.data.local.TrackEntity
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -19,12 +24,22 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
+/**
+ * Player engine backed by MediaController → MusicsPlaybackService (MediaSessionService).
+ *
+ * This wiring means:
+ *  - ExoPlayer lives inside the service → keeps playing when the app is backgrounded
+ *  - The OS media session is populated → notification shade controls, lock screen,
+ *    and the Android Dynamic Island / Now Playing chip all reflect the current track
+ *  - Audio focus is handled by the service automatically
+ */
 @OptIn(UnstableApi::class)
 class MusicsPlayerEngine(
     private val context: Context,
     private val scope: CoroutineScope
 ) {
-    private val exoPlayer: ExoPlayer = ExoPlayer.Builder(context).build()
+    private var controllerFuture: ListenableFuture<MediaController>? = null
+    private var controller: MediaController? = null
 
     private val _currentTrack = MutableStateFlow<TrackEntity?>(null)
     val currentTrack: StateFlow<TrackEntity?> = _currentTrack.asStateFlow()
@@ -32,7 +47,6 @@ class MusicsPlayerEngine(
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 
-    // Polled at 16ms (~60fps) for buttery-smooth timeline scrubbing as specified in PDF
     private val _playbackPositionMs = MutableStateFlow(0L)
     val playbackPositionMs: StateFlow<Long> = _playbackPositionMs.asStateFlow()
 
@@ -54,49 +68,53 @@ class MusicsPlayerEngine(
     private var tickerJob: Job? = null
 
     init {
-        exoPlayer.addListener(object : Player.Listener {
-            override fun onIsPlayingChanged(playing: Boolean) {
-                _isPlaying.value = playing
-                if (playing) {
-                    startHighPrecisionTicker()
-                } else {
-                    _playbackPositionMs.value = exoPlayer.currentPosition
-                }
-            }
-
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                when (playbackState) {
-                    Player.STATE_READY -> {
-                        val dur = exoPlayer.duration
-                        if (dur > 0) {
-                            _durationMs.value = dur
-                        }
-                    }
-                    Player.STATE_ENDED -> {
-                        playNext(userInitiated = false)
-                    }
-                    else -> Unit
-                }
-            }
-        })
+        connectToService()
     }
 
-    /**
-     * PDF Requirement:
-     * "We will implement a custom Compose Canvas timeline polled at 16ms intervals
-     * (via a coroutine loop tied to ExoPlayer). This ensures the scrubber advances
-     * with buttery-smooth, continuous precision."
-     */
+    private fun connectToService() {
+        val sessionToken = SessionToken(
+            context,
+            ComponentName(context, MusicsPlaybackService::class.java)
+        )
+        controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
+        controllerFuture?.addListener({
+            try {
+                controller = controllerFuture?.get()
+                controller?.addListener(playerListener)
+            } catch (e: Exception) {
+                Log.e("MusicsPlayerEngine", "Failed to connect to MediaSessionService", e)
+            }
+        }, MoreExecutors.directExecutor())
+    }
+
+    private val playerListener = object : Player.Listener {
+        override fun onIsPlayingChanged(playing: Boolean) {
+            _isPlaying.value = playing
+            if (playing) startHighPrecisionTicker() else {
+                _playbackPositionMs.value = controller?.currentPosition ?: 0L
+            }
+        }
+
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            if (playbackState == Player.STATE_READY) {
+                val dur = controller?.duration ?: 0L
+                if (dur > 0) _durationMs.value = dur
+            } else if (playbackState == Player.STATE_ENDED) {
+                playNext(userInitiated = false)
+            }
+        }
+    }
+
     private fun startHighPrecisionTicker() {
         tickerJob?.cancel()
         tickerJob = scope.launch(Dispatchers.Main) {
-            while (isActive && exoPlayer.isPlaying) {
-                _playbackPositionMs.value = exoPlayer.currentPosition
-                val dur = exoPlayer.duration
-                if (dur > 0 && dur != _durationMs.value) {
-                    _durationMs.value = dur
-                }
-                delay(16L) // 16ms = ~60 FPS update frequency
+            while (isActive) {
+                val c = controller ?: break
+                if (!c.isPlaying) break
+                _playbackPositionMs.value = c.currentPosition
+                val dur = c.duration
+                if (dur > 0 && dur != _durationMs.value) _durationMs.value = dur
+                delay(16L)
             }
         }
     }
@@ -113,25 +131,55 @@ class MusicsPlayerEngine(
         _durationMs.value = if (track.durationMs > 0) track.durationMs else 1L
         _playbackPositionMs.value = 0L
 
+        val c = controller
+        if (c == null) {
+            // Controller not yet ready - retry once connected
+            scope.launch(Dispatchers.Main) {
+                var waited = 0
+                while (controller == null && waited < 3000) {
+                    delay(100)
+                    waited += 100
+                }
+                controller?.let { playTrackOnController(it, track) }
+            }
+            return
+        }
+        playTrackOnController(c, track)
+    }
+
+    private fun playTrackOnController(c: MediaController, track: TrackEntity) {
         try {
-            val mediaItem = MediaItem.fromUri(Uri.parse(track.contentUri))
-            exoPlayer.setMediaItem(mediaItem)
-            exoPlayer.prepare()
-            exoPlayer.play()
+            val artUri = track.albumArtUri?.let { Uri.parse(it) }
+            val metadata = MediaMetadata.Builder()
+                .setTitle(track.title)
+                .setArtist(track.artist)
+                .setAlbumTitle(track.album)
+                .setArtworkUri(artUri)
+                .build()
+
+            val mediaItem = MediaItem.Builder()
+                .setUri(Uri.parse(track.contentUri))
+                .setMediaMetadata(metadata)
+                .build()
+
+            c.setMediaItem(mediaItem)
+            c.prepare()
+            c.play()
             _isPlaying.value = true
             startHighPrecisionTicker()
         } catch (e: Exception) {
-            Log.e("MusicsPlayer", "Failed to start playback for ${track.title}", e)
+            Log.e("MusicsPlayerEngine", "Failed to start playback for ${track.title}", e)
         }
     }
 
     fun togglePlayPause() {
-        if (exoPlayer.isPlaying) {
-            exoPlayer.pause()
+        val c = controller ?: return
+        if (c.isPlaying) {
+            c.pause()
             _isPlaying.value = false
         } else {
             if (_currentTrack.value != null) {
-                exoPlayer.play()
+                c.play()
                 _isPlaying.value = true
                 startHighPrecisionTicker()
             } else if (_queue.value.isNotEmpty()) {
@@ -143,7 +191,7 @@ class MusicsPlayerEngine(
 
     fun seekTo(positionMs: Long) {
         val target = positionMs.coerceIn(0L, _durationMs.value)
-        exoPlayer.seekTo(target)
+        controller?.seekTo(target)
         _playbackPositionMs.value = target
     }
 
@@ -170,7 +218,7 @@ class MusicsPlayerEngine(
         val q = _queue.value
         if (q.isEmpty()) return
 
-        if (exoPlayer.currentPosition > 3000L) {
+        if ((controller?.currentPosition ?: 0L) > 3000L) {
             seekTo(0L)
             return
         }
@@ -185,16 +233,13 @@ class MusicsPlayerEngine(
         playTrack(q[prevIndex])
     }
 
-    fun toggleShuffle() {
-        _isShuffle.value = !_isShuffle.value
-    }
-
-    fun toggleRepeat() {
-        _isRepeat.value = !_isRepeat.value
-    }
+    fun toggleShuffle() { _isShuffle.value = !_isShuffle.value }
+    fun toggleRepeat()  { _isRepeat.value  = !_isRepeat.value  }
 
     fun release() {
         tickerJob?.cancel()
-        exoPlayer.release()
+        controller?.removeListener(playerListener)
+        controllerFuture?.let { MediaController.releaseFuture(it) }
+        controller = null
     }
 }

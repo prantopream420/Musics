@@ -27,11 +27,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.data.local.TrackEntity
 import com.example.ui.theme.AudiophileGold
 import com.example.ui.theme.NeonCyan
@@ -68,7 +72,7 @@ fun TrackItemView(
                 .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Album art / format icon tile
+            // Album art tile with real art via Coil, fallback to icon
             Box(
                 modifier = Modifier
                     .size(48.dp)
@@ -84,14 +88,37 @@ fun TrackItemView(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                if (isPlayingThis) {
-                    Icon(
-                        imageVector = Icons.Default.Equalizer,
-                        contentDescription = "Playing",
-                        tint = NeonCyan,
-                        modifier = Modifier.size(24.dp)
+                if (!track.albumArtUri.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(track.albumArtUri)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Album art for ${track.album}",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(10.dp))
                     )
-                } else {
+                }
+
+                // Overlay equalizer icon when playing
+                if (isPlayingThis) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xAA060A10)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Equalizer,
+                            contentDescription = "Playing",
+                            tint = NeonCyan,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                } else if (track.albumArtUri.isNullOrEmpty()) {
                     Icon(
                         imageVector = Icons.Default.MusicNote,
                         contentDescription = null,
@@ -104,9 +131,7 @@ fun TrackItemView(
             Spacer(modifier = Modifier.width(12.dp))
 
             // Track Title, Artist & Audiophile Badges
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = track.title,
                     color = if (isPlayingThis) NeonCyan else TextPrimary,
@@ -124,7 +149,6 @@ fun TrackItemView(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                // Dynamic Audiophile Badge (FLAC 24-bit / 96kHz or MP3 320 kbps)
                 Row(
                     modifier = Modifier.padding(top = 4.dp),
                     verticalAlignment = Alignment.CenterVertically

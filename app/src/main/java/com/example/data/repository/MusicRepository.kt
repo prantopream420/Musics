@@ -84,6 +84,7 @@ class MusicRepository(private val context: Context) {
                 MediaStore.Audio.Media.TITLE,
                 MediaStore.Audio.Media.ARTIST,
                 MediaStore.Audio.Media.ALBUM,
+                MediaStore.Audio.Media.ALBUM_ID,
                 MediaStore.Audio.Media.DURATION,
                 MediaStore.Audio.Media.SIZE,
                 MediaStore.Audio.Media.DATA,
@@ -130,6 +131,7 @@ class MusicRepository(private val context: Context) {
                 val titleCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
                 val artistCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
                 val albumCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
+                val albumIdCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM_ID)
                 val durCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
                 val sizeCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
                 val dataCol = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
@@ -145,11 +147,18 @@ class MusicRepository(private val context: Context) {
                     val title = c.getString(titleCol) ?: "Unknown Track"
                     val artist = c.getString(artistCol)?.let { if (it == "<unknown>") "Unknown Artist" else it } ?: "Unknown Artist"
                     val album = c.getString(albumCol)?.let { if (it == "<unknown>") "Unknown Album" else it } ?: "Unknown Album"
+                    val albumId = c.getLong(albumIdCol)
                     val duration = c.getLong(durCol)
                     val size = c.getLong(sizeCol)
                     val path = c.getString(dataCol) ?: ""
                     val dateAdded = c.getLong(dateCol)
                     val mime = c.getString(mimeCol) ?: "audio/mpeg"
+
+                    // Build album art URI from MediaStore album art content provider
+                    val albumArtUri = ContentUris.withAppendedId(
+                        Uri.parse("content://media/external/audio/albumart"),
+                        albumId
+                    ).toString()
 
                     // Secondary Junk Filtering: Path inspection for WhatsApp and recordings
                     if (!settings.includeVoiceNotesAndRingtones) {
@@ -214,7 +223,7 @@ class MusicRepository(private val context: Context) {
                             dateAdded = dateAdded,
                             isLossless = isLossless,
                             isFavorite = false,
-                            albumArtUri = null
+                            albumArtUri = albumArtUri
                         )
                     )
 

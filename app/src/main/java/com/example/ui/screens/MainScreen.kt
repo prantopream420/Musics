@@ -494,6 +494,7 @@ fun MainScreen(
                     scanState = scanState,
                     isProUnlocked = isProUnlocked,
                     otaStatus = otaStatus,
+                    palette = palette,
                     onClose = { viewModel.setSettingsOpen(false) },
                     onUpdateScanSettings = { bypass, include ->
                         viewModel.updateScanSettings(bypass, include)

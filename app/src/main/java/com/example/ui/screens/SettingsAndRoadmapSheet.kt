@@ -21,7 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudQueue
@@ -59,7 +59,9 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.ScanSettings
 import com.example.data.repository.ScanState
 import com.example.ui.components.FrostedGlassBox
+import com.example.ui.components.LiquidGlassBackground
 import com.example.ui.theme.AudiophileGold
+import com.example.ui.theme.DynamicPaletteColors
 import com.example.ui.theme.HighResGreen
 import com.example.ui.theme.NeonCyan
 import com.example.ui.theme.TextMuted
@@ -73,6 +75,7 @@ fun SettingsAndRoadmapSheet(
     scanState: ScanState,
     isProUnlocked: Boolean,
     otaStatus: String?,
+    palette: DynamicPaletteColors,
     onClose: () -> Unit,
     onUpdateScanSettings: (Boolean, Boolean) -> Unit,
     onTriggerScan: () -> Unit,
@@ -80,25 +83,22 @@ fun SettingsAndRoadmapSheet(
     onCheckOta: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Hierarchical navigation: Back handler closes settings first
-    BackHandler(enabled = true) {
-        onClose()
-    }
+    BackHandler(enabled = true) { onClose() }
 
     var licenseInput by remember { mutableStateOf("") }
     var licenseFeedback by remember { mutableStateOf<String?>(null) }
 
-    Box(
+    LiquidGlassBackground(
+        palette = palette,
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFF090D17))
-            .statusBarsPadding()
-            .navigationBarsPadding()
             .testTag("settings_screen")
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
@@ -114,7 +114,7 @@ fun SettingsAndRoadmapSheet(
                     modifier = Modifier.testTag("settings_back_button")
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
                         tint = TextPrimary
                     )
@@ -137,14 +137,8 @@ fun SettingsAndRoadmapSheet(
                 }
             }
 
-            // SECTION 1: SMART SCAN & JUNK FILTERING (From PDF Page 2)
-            Text(
-                text = "MEDIASTORE SCANNING & JUNK FILTERING",
-                color = NeonCyan,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.2.sp
-            )
+            // SECTION 1: SMART SCAN & JUNK FILTERING
+            SectionHeader(text = "MEDIASTORE SCANNING & JUNK FILTERING", color = NeonCyan)
             Spacer(modifier = Modifier.height(8.dp))
 
             FrostedGlassBox(
@@ -156,75 +150,30 @@ fun SettingsAndRoadmapSheet(
                 borderColor = Color(0x3B94A3B8)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    // 60-Second Junk Filter
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Bypass 60-Second Filter",
-                                color = TextPrimary,
-                                fontSize = 14.5.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = "When OFF, files under 60s are excluded to hide voice notes & ringtones. Toggling re-scans the Room DB cache.",
-                                color = TextMuted,
-                                fontSize = 11.5.sp
-                            )
-                        }
-
-                        Switch(
-                            checked = scanSettings.bypass60SecondRule,
-                            onCheckedChange = { bypass ->
-                                onUpdateScanSettings(bypass, scanSettings.includeVoiceNotesAndRingtones)
-                            },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = NeonCyan,
-                                checkedTrackColor = Color(0xFF004D5A)
-                            ),
-                            modifier = Modifier.testTag("bypass_60s_switch")
-                        )
-                    }
+                    ToggleRow(
+                        title = "Bypass 60-Second Filter",
+                        description = "When OFF, files under 60s are excluded to hide voice notes & ringtones. Toggling re-scans the Room DB cache.",
+                        checked = scanSettings.bypass60SecondRule,
+                        onCheckedChange = { bypass ->
+                            onUpdateScanSettings(bypass, scanSettings.includeVoiceNotesAndRingtones)
+                        },
+                        testTag = "bypass_60s_switch"
+                    )
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // Voice Notes & WhatsApp Filter
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Include WhatsApp & Voice Notes",
-                                color = TextPrimary,
-                                fontSize = 14.5.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                            Text(
-                                text = "Include WhatsApp Audio, Telegram, call recordings, alarms & system tones.",
-                                color = TextMuted,
-                                fontSize = 11.5.sp
-                            )
-                        }
-
-                        Switch(
-                            checked = scanSettings.includeVoiceNotesAndRingtones,
-                            onCheckedChange = { include ->
-                                onUpdateScanSettings(scanSettings.bypass60SecondRule, include)
-                            },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = NeonCyan,
-                                checkedTrackColor = Color(0xFF004D5A)
-                            ),
-                            modifier = Modifier.testTag("include_voice_notes_switch")
-                        )
-                    }
+                    ToggleRow(
+                        title = "Include WhatsApp & Voice Notes",
+                        description = "Include WhatsApp Audio, Telegram, call recordings, alarms & system tones.",
+                        checked = scanSettings.includeVoiceNotesAndRingtones,
+                        onCheckedChange = { include ->
+                            onUpdateScanSettings(scanSettings.bypass60SecondRule, include)
+                        },
+                        testTag = "include_voice_notes_switch"
+                    )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Scan Status & Rescan Action Button
                     Button(
                         onClick = onTriggerScan,
                         modifier = Modifier
@@ -252,7 +201,6 @@ fun SettingsAndRoadmapSheet(
                         }
                     }
 
-                    // Live Scan Progress State
                     when (scanState) {
                         is ScanState.Scanning -> {
                             Spacer(modifier = Modifier.height(10.dp))
@@ -285,11 +233,19 @@ fun SettingsAndRoadmapSheet(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "Smart Scan Complete • ${scanState.totalScanned} valid audio files cached in Room (${scanState.filteredOutCount} junk filtered)",
+                                    text = "Scan Complete • ${scanState.totalScanned} files cached (${scanState.filteredOutCount} filtered)",
                                     color = HighResGreen,
                                     fontSize = 11.5.sp
                                 )
                             }
+                        }
+                        is ScanState.Error -> {
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = "Scan error: ${scanState.message}",
+                                color = Color(0xFFFF5252),
+                                fontSize = 11.5.sp
+                            )
                         }
                         else -> Unit
                     }
@@ -298,14 +254,8 @@ fun SettingsAndRoadmapSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // SECTION 2: AUDIO ENGINE SPECIFICATIONS (From PDF Page 2)
-            Text(
-                text = "AUDIO ENGINE & DECODER STATUS",
-                color = AudiophileGold,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.2.sp
-            )
+            // SECTION 2: AUDIO ENGINE
+            SectionHeader(text = "AUDIO ENGINE & DECODER STATUS", color = AudiophileGold)
             Spacer(modifier = Modifier.height(8.dp))
 
             FrostedGlassBox(
@@ -319,6 +269,11 @@ fun SettingsAndRoadmapSheet(
                         label = "Backend Engine",
                         value = "AndroidX Media3 ExoPlayer",
                         status = "Hardware Accelerated"
+                    )
+                    DecoderRow(
+                        label = "Playback Service",
+                        value = "MusicsPlaybackService (Foreground)",
+                        status = "Active"
                     )
                     DecoderRow(
                         label = "Metadata Inspector",
@@ -340,14 +295,8 @@ fun SettingsAndRoadmapSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // SECTION 3: FUTURE ROADMAP: CLOUD INTEGRATION (V2) (From PDF Page 3)
-            Text(
-                text = "V2 ROADMAP & ARCHITECTURE (PREVIEW)",
-                color = VibrantMagenta,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.2.sp
-            )
+            // SECTION 3: V2 ROADMAP
+            SectionHeader(text = "V2 ROADMAP & ARCHITECTURE (PREVIEW)", color = VibrantMagenta)
             Spacer(modifier = Modifier.height(8.dp))
 
             FrostedGlassBox(
@@ -379,14 +328,8 @@ fun SettingsAndRoadmapSheet(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // SECTION 4: MONETIZATION & DIRECT LICENSE KEY (From PDF Page 3)
-            Text(
-                text = "LICENSE KEY & OVER-THE-AIR UPDATER",
-                color = NeonCyan,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.2.sp
-            )
+            // SECTION 4: LICENSE & OTA
+            SectionHeader(text = "LICENSE KEY & OVER-THE-AIR UPDATER", color = NeonCyan)
             Spacer(modifier = Modifier.height(8.dp))
 
             FrostedGlassBox(
@@ -495,7 +438,7 @@ fun SettingsAndRoadmapSheet(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // OTA Updates (GitHub Releases)
+                    // OTA Updates
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -544,6 +487,57 @@ fun SettingsAndRoadmapSheet(
     }
 }
 
+// ─── Reusable private composables ────────────────────────────────────────────
+
+@Composable
+private fun SectionHeader(text: String, color: Color) {
+    Text(
+        text = text,
+        color = color,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 1.2.sp
+    )
+}
+
+@Composable
+private fun ToggleRow(
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    testTag: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                color = TextPrimary,
+                fontSize = 14.5.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = description,
+                color = TextMuted,
+                fontSize = 11.5.sp
+            )
+        }
+
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = NeonCyan,
+                checkedTrackColor = Color(0xFF004D5A)
+            ),
+            modifier = Modifier.testTag(testTag)
+        )
+    }
+}
+
 @Composable
 private fun DecoderRow(label: String, value: String, status: String) {
     Row(
@@ -553,7 +547,7 @@ private fun DecoderRow(label: String, value: String, status: String) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(text = label, color = TextMuted, fontSize = 11.sp)
             Text(text = value, color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         }

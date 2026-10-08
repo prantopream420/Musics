@@ -51,8 +51,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -60,6 +63,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.data.local.TrackEntity
 import com.example.ui.components.AudiophileBadge
 import com.example.ui.components.FrostedGlassBox
@@ -92,19 +97,16 @@ fun NowPlayingSheet(
     onFavoriteToggle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Hierarchical navigation: Back button collapses Now Playing screen first
-    BackHandler(enabled = true) {
-        onCollapse()
-    }
+    BackHandler(enabled = true) { onCollapse() }
 
     if (track == null) return
 
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 0.98f,
-        targetValue = 1.02f,
+        initialValue = 0.97f,
+        targetValue = 1.03f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = FastOutSlowInEasing),
+            animation = tween(1800, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "artPulse"
@@ -147,7 +149,7 @@ fun NowPlayingSheet(
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "PLAYING FROM STORAGE",
+                        text = "NOW PLAYING",
                         color = TextMuted,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
@@ -177,11 +179,12 @@ fun NowPlayingSheet(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Liquid Glass Album Art Centerpiece
+            // Album Art — real image via Coil, animated pulse when playing, fallback to gradient
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.78f)
                     .aspectRatio(1f)
+                    .scale(if (isPlaying) pulseScale else 1f)
                     .clip(RoundedCornerShape(32.dp))
                     .background(
                         Brush.linearGradient(
@@ -205,23 +208,59 @@ fun NowPlayingSheet(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                // Frosted Art Silhouette
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MusicNote,
-                        contentDescription = null,
-                        tint = palette.primary,
-                        modifier = Modifier.size(80.dp)
+                if (!track.albumArtUri.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(track.albumArtUri)
+                            .crossfade(400)
+                            .build(),
+                        contentDescription = "Album art for ${track.album}",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(32.dp))
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    AudiophileBadge(
-                        badgeText = track.audiophileBadge,
-                        isLossless = track.isLossless,
-                        isExpanded = true
-                    )
+                    // Subtle gradient overlay on top of the art so the badge is readable
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(32.dp))
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        Color(0x88000000)
+                                    )
+                                )
+                            ),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        AudiophileBadge(
+                            badgeText = track.audiophileBadge,
+                            isLossless = track.isLossless,
+                            isExpanded = true,
+                            modifier = Modifier.padding(bottom = 14.dp)
+                        )
+                    }
+                } else {
+                    // Fallback when there's no album art
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MusicNote,
+                            contentDescription = null,
+                            tint = palette.primary,
+                            modifier = Modifier.size(80.dp)
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        AudiophileBadge(
+                            badgeText = track.audiophileBadge,
+                            isLossless = track.isLossless,
+                            isExpanded = true
+                        )
+                    }
                 }
             }
 
@@ -316,7 +355,6 @@ fun NowPlayingSheet(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Shuffle Button
                 IconButton(
                     onClick = onShuffleToggle,
                     modifier = Modifier.testTag("now_playing_shuffle")
@@ -329,7 +367,6 @@ fun NowPlayingSheet(
                     )
                 }
 
-                // Previous Button
                 IconButton(
                     onClick = onPrevious,
                     modifier = Modifier
@@ -344,7 +381,6 @@ fun NowPlayingSheet(
                     )
                 }
 
-                // Center Hero Play/Pause Button with Glowing Neon Glass Aura
                 Box(
                     modifier = Modifier
                         .size(76.dp)
@@ -383,7 +419,6 @@ fun NowPlayingSheet(
                     }
                 }
 
-                // Next Button
                 IconButton(
                     onClick = onNext,
                     modifier = Modifier
@@ -398,7 +433,6 @@ fun NowPlayingSheet(
                     )
                 }
 
-                // Repeat Button
                 IconButton(
                     onClick = onRepeatToggle,
                     modifier = Modifier.testTag("now_playing_repeat")
@@ -423,9 +457,7 @@ private fun SpecItem(
     label: String,
     value: String
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = label,
             color = TextMuted,

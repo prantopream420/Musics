@@ -27,11 +27,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.data.local.TrackEntity
 import com.example.ui.theme.NeonCyan
 import com.example.ui.theme.TextPrimary
@@ -88,7 +92,7 @@ fun MiniPlayerBar(
                     .padding(horizontal = 14.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Mini Art Icon
+                // Album art thumbnail — real art via Coil, fallback MusicNote icon
                 Box(
                     modifier = Modifier
                         .size(42.dp)
@@ -100,17 +104,30 @@ fun MiniPlayerBar(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.MusicNote,
-                        contentDescription = null,
-                        tint = accentColor,
-                        modifier = Modifier.size(22.dp)
-                    )
+                    if (!currentTrack.albumArtUri.isNullOrEmpty()) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(currentTrack.albumArtUri)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "Album art",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.MusicNote,
+                            contentDescription = null,
+                            tint = accentColor,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Title and Artist
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = currentTrack.title,
@@ -136,7 +153,7 @@ fun MiniPlayerBar(
                     }
                 }
 
-                // Play / Pause Button
+                // Play / Pause
                 IconButton(
                     onClick = onPlayPauseToggle,
                     modifier = Modifier
@@ -155,7 +172,7 @@ fun MiniPlayerBar(
 
                 Spacer(modifier = Modifier.width(4.dp))
 
-                // Next Button
+                // Next
                 IconButton(
                     onClick = onNext,
                     modifier = Modifier
