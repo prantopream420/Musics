@@ -109,6 +109,13 @@ class MusicPlayerViewModel(application: Application) : AndroidViewModel(applicat
     private val _otaStatus = MutableStateFlow<String?>(null)
     val otaStatus: StateFlow<String?> = _otaStatus.asStateFlow()
 
+    private val _isDarkMode = MutableStateFlow(true)
+    val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
+
+    fun toggleDarkMode() {
+        _isDarkMode.value = !_isDarkMode.value
+    }
+
     init {
         // Initial scan / demo load
         viewModelScope.launch {

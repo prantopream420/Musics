@@ -39,10 +39,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.SortOrder
 import com.example.ui.components.FrostedGlassBox
+import com.example.ui.theme.AppTheme
 import com.example.ui.theme.NeonCyan
-import com.example.ui.theme.TextMuted
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
+
+
+
 
 @Composable
 fun SortDrawerSheet(
@@ -83,7 +84,7 @@ fun SortDrawerSheet(
                     )
                     Text(
                         text = "Sort MediaStore",
-                        color = TextPrimary,
+                        color = AppTheme.colors.textPrimary,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -96,7 +97,7 @@ fun SortDrawerSheet(
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Close",
-                        tint = TextSecondary
+                        tint = AppTheme.colors.textSecondary
                     )
                 }
             }
@@ -105,7 +106,7 @@ fun SortDrawerSheet(
 
             Text(
                 text = "DICTATE QUERY SORT_ORDER",
-                color = TextMuted,
+                color = AppTheme.colors.textMuted,
                 fontSize = 10.5.sp,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 0.8.sp
@@ -178,13 +179,13 @@ fun SortDrawerSheet(
                     Column {
                         Text(
                             text = "Smart Scan & Junk Filter",
-                            color = TextPrimary,
+                            color = AppTheme.colors.textPrimary,
                             fontSize = 13.5.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = "Configure 60s rule & cache",
-                            color = TextSecondary,
+                            color = AppTheme.colors.textSecondary,
                             fontSize = 11.sp
                         )
                     }
@@ -217,7 +218,7 @@ private fun SortItem(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (isSelected) NeonCyan else TextSecondary,
+                tint = if (isSelected) NeonCyan else AppTheme.colors.textSecondary,
                 modifier = Modifier.size(22.dp)
             )
 
@@ -226,13 +227,13 @@ private fun SortItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = label,
-                    color = if (isSelected) NeonCyan else TextPrimary,
+                    color = if (isSelected) NeonCyan else AppTheme.colors.textPrimary,
                     fontSize = 14.sp,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold
                 )
                 Text(
                     text = description,
-                    color = TextMuted,
+                    color = AppTheme.colors.textMuted,
                     fontSize = 11.sp
                 )
             }

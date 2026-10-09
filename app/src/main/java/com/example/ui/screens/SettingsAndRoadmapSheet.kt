@@ -63,10 +63,11 @@ import com.example.ui.components.LiquidGlassBackground
 import com.example.ui.theme.AudiophileGold
 import com.example.ui.theme.DynamicPaletteColors
 import com.example.ui.theme.HighResGreen
+import com.example.ui.theme.AppTheme
 import com.example.ui.theme.NeonCyan
-import com.example.ui.theme.TextMuted
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
+
+
+
 import com.example.ui.theme.VibrantMagenta
 
 @Composable
@@ -81,6 +82,8 @@ fun SettingsAndRoadmapSheet(
     onTriggerScan: () -> Unit,
     onActivateLicenseKey: (String) -> Boolean,
     onCheckOta: () -> Unit,
+    isDarkMode: Boolean,
+    onToggleDarkMode: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     BackHandler(enabled = true) { onClose() }
@@ -116,7 +119,7 @@ fun SettingsAndRoadmapSheet(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = TextPrimary
+                        tint = AppTheme.colors.textPrimary
                     )
                 }
 
@@ -125,19 +128,39 @@ fun SettingsAndRoadmapSheet(
                 Column {
                     Text(
                         text = "Musics Engine Settings",
-                        color = TextPrimary,
+                        color = AppTheme.colors.textPrimary,
                         fontSize = 19.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "Smart Scanner & V2 Architecture",
-                        color = TextSecondary,
+                        color = AppTheme.colors.textSecondary,
                         fontSize = 12.sp
                     )
                 }
             }
 
             // SECTION 1: SMART SCAN & JUNK FILTERING
+            SectionHeader(text = "APPEARANCE & THEME", color = NeonCyan)
+            Spacer(modifier = Modifier.height(8.dp))
+            FrostedGlassBox(
+                modifier = Modifier.fillMaxWidth().testTag("appearance_card"),
+                shape = RoundedCornerShape(18.dp),
+                backgroundColor = Color(0x2E1E293B),
+                borderColor = Color(0x3B94A3B8)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    ToggleRow(
+                        title = "Dark Mode",
+                        description = "Enable Obsidian Liquid Glass Dark Mode. Disable for Light Mode.",
+                        checked = isDarkMode,
+                        onCheckedChange = { onToggleDarkMode() },
+                        testTag = "dark_mode_switch"
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+
             SectionHeader(text = "MEDIASTORE SCANNING & JUNK FILTERING", color = NeonCyan)
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -217,7 +240,7 @@ fun SettingsAndRoadmapSheet(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = "Scanning MediaStore: ${scanState.scannedCount} tracks found",
-                                    color = TextSecondary,
+                                    color = AppTheme.colors.textSecondary,
                                     fontSize = 12.sp
                                 )
                             }
@@ -351,7 +374,7 @@ fun SettingsAndRoadmapSheet(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = if (isProUnlocked) "Pro License Activated" else "Direct Purchase License Key",
-                            color = TextPrimary,
+                            color = AppTheme.colors.textPrimary,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -361,7 +384,7 @@ fun SettingsAndRoadmapSheet(
 
                     Text(
                         text = "V1 local playback is free indefinitely. Entering your license key permanently unlocks background downloading, cloud sync, and the high-res quality selector.",
-                        color = TextMuted,
+                        color = AppTheme.colors.textMuted,
                         fontSize = 12.sp
                     )
 
@@ -381,8 +404,8 @@ fun SettingsAndRoadmapSheet(
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = NeonCyan,
                                 unfocusedBorderColor = Color(0x4094A3B8),
-                                focusedTextColor = TextPrimary,
-                                unfocusedTextColor = TextPrimary
+                                focusedTextColor = AppTheme.colors.textPrimary,
+                                unfocusedTextColor = AppTheme.colors.textPrimary
                             ),
                             singleLine = true
                         )
@@ -447,13 +470,13 @@ fun SettingsAndRoadmapSheet(
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = "Over-The-Air (OTA) Updates",
-                                color = TextPrimary,
+                                color = AppTheme.colors.textPrimary,
                                 fontSize = 13.5.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
                             Text(
                                 text = "Direct community distribution via GitHub Releases",
-                                color = TextMuted,
+                                color = AppTheme.colors.textMuted,
                                 fontSize = 11.5.sp
                             )
                         }
@@ -515,13 +538,13 @@ private fun ToggleRow(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                color = TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 14.5.sp,
                 fontWeight = FontWeight.SemiBold
             )
             Text(
                 text = description,
-                color = TextMuted,
+                color = AppTheme.colors.textMuted,
                 fontSize = 11.5.sp
             )
         }
@@ -548,8 +571,8 @@ private fun DecoderRow(label: String, value: String, status: String) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = label, color = TextMuted, fontSize = 11.sp)
-            Text(text = value, color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Text(text = label, color = AppTheme.colors.textMuted, fontSize = 11.sp)
+            Text(text = value, color = AppTheme.colors.textPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         }
         Box(
             modifier = Modifier
@@ -587,14 +610,14 @@ private fun RoadmapTile(
         Column {
             Text(
                 text = title,
-                color = TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 13.5.sp,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = subtitle,
-                color = TextSecondary,
+                color = AppTheme.colors.textSecondary,
                 fontSize = 11.5.sp
             )
         }

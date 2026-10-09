@@ -38,10 +38,11 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.data.local.TrackEntity
 import com.example.ui.theme.AudiophileGold
+import com.example.ui.theme.AppTheme
 import com.example.ui.theme.NeonCyan
-import com.example.ui.theme.TextMuted
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
+
+
+
 import com.example.ui.theme.VibrantMagenta
 
 @Composable
@@ -122,7 +123,7 @@ fun TrackItemView(
                     Icon(
                         imageVector = Icons.Default.MusicNote,
                         contentDescription = null,
-                        tint = if (track.isLossless) AudiophileGold.copy(alpha = 0.8f) else TextSecondary,
+                        tint = if (track.isLossless) AudiophileGold.copy(alpha = 0.8f) else AppTheme.colors.textSecondary,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -134,7 +135,7 @@ fun TrackItemView(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = track.title,
-                    color = if (isPlayingThis) NeonCyan else TextPrimary,
+                    color = if (isPlayingThis) NeonCyan else AppTheme.colors.textPrimary,
                     fontSize = 15.sp,
                     fontWeight = if (isPlayingThis) FontWeight.Bold else FontWeight.SemiBold,
                     maxLines = 1,
@@ -143,7 +144,7 @@ fun TrackItemView(
 
                 Text(
                     text = "${track.artist} • ${track.album}",
-                    color = TextSecondary,
+                    color = AppTheme.colors.textSecondary,
                     fontSize = 12.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -162,7 +163,7 @@ fun TrackItemView(
 
                     Text(
                         text = "${track.formattedDuration}  •  ${track.formattedSize}",
-                        color = TextMuted,
+                        color = AppTheme.colors.textMuted,
                         fontSize = 10.5.sp
                     )
                 }
@@ -178,7 +179,7 @@ fun TrackItemView(
                 Icon(
                     imageVector = if (track.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                     contentDescription = "Favorite",
-                    tint = if (track.isFavorite) VibrantMagenta else TextMuted,
+                    tint = if (track.isFavorite) VibrantMagenta else AppTheme.colors.textMuted,
                     modifier = Modifier.size(20.dp)
                 )
             }

@@ -72,10 +72,11 @@ import com.example.ui.components.LiquidGlassBackground
 import com.example.ui.components.TimelineCanvas
 import com.example.ui.theme.AudiophileGold
 import com.example.ui.theme.DynamicPaletteColors
+import com.example.ui.theme.AppTheme
 import com.example.ui.theme.NeonCyan
-import com.example.ui.theme.TextMuted
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
+
+
+
 import com.example.ui.theme.VibrantMagenta
 
 @Composable
@@ -142,7 +143,7 @@ fun NowPlayingSheet(
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowDown,
                         contentDescription = "Collapse",
-                        tint = TextPrimary,
+                        tint = AppTheme.colors.textPrimary,
                         modifier = Modifier.size(32.dp)
                     )
                 }
@@ -150,14 +151,14 @@ fun NowPlayingSheet(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "NOW PLAYING",
-                        color = TextMuted,
+                        color = AppTheme.colors.textMuted,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.5.sp
                     )
                     Text(
                         text = track.album,
-                        color = TextSecondary,
+                        color = AppTheme.colors.textSecondary,
                         fontSize = 13.sp,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -171,7 +172,7 @@ fun NowPlayingSheet(
                     Icon(
                         imageVector = if (track.isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                         contentDescription = "Favorite",
-                        tint = if (track.isFavorite) VibrantMagenta else TextSecondary,
+                        tint = if (track.isFavorite) VibrantMagenta else AppTheme.colors.textSecondary,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -269,7 +270,7 @@ fun NowPlayingSheet(
             // Title & Artist
             Text(
                 text = track.title,
-                color = TextPrimary,
+                color = AppTheme.colors.textPrimary,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
@@ -362,7 +363,7 @@ fun NowPlayingSheet(
                     Icon(
                         imageVector = Icons.Default.Shuffle,
                         contentDescription = "Shuffle",
-                        tint = if (isShuffle) palette.primary else TextMuted,
+                        tint = if (isShuffle) palette.primary else AppTheme.colors.textMuted,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -376,7 +377,7 @@ fun NowPlayingSheet(
                     Icon(
                         imageVector = Icons.Default.SkipPrevious,
                         contentDescription = "Previous",
-                        tint = TextPrimary,
+                        tint = AppTheme.colors.textPrimary,
                         modifier = Modifier.size(36.dp)
                     )
                 }
@@ -428,7 +429,7 @@ fun NowPlayingSheet(
                     Icon(
                         imageVector = Icons.Default.SkipNext,
                         contentDescription = "Next",
-                        tint = TextPrimary,
+                        tint = AppTheme.colors.textPrimary,
                         modifier = Modifier.size(36.dp)
                     )
                 }
@@ -440,7 +441,7 @@ fun NowPlayingSheet(
                     Icon(
                         imageVector = if (isRepeat) Icons.Default.RepeatOne else Icons.Default.Repeat,
                         contentDescription = "Repeat",
-                        tint = if (isRepeat) palette.primary else TextMuted,
+                        tint = if (isRepeat) palette.primary else AppTheme.colors.textMuted,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -460,7 +461,7 @@ private fun SpecItem(
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = label,
-            color = TextMuted,
+            color = AppTheme.colors.textMuted,
             fontSize = 9.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily.Monospace,
@@ -469,7 +470,7 @@ private fun SpecItem(
         Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = value,
-            color = TextPrimary,
+            color = AppTheme.colors.textPrimary,
             fontSize = 11.5.sp,
             fontWeight = FontWeight.SemiBold,
             fontFamily = FontFamily.Monospace

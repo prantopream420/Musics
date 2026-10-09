@@ -31,9 +31,10 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.theme.AppTheme
 import com.example.ui.theme.NeonCyan
-import com.example.ui.theme.TextMuted
-import com.example.ui.theme.TextSecondary
+
+
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.sin
@@ -116,11 +117,13 @@ fun TimelineCanvas(
 
             for (i in 0 until tickCount) {
                 val tickX = i * tickGap + tickGap / 2f
-                // Procedural harmonic waveform amplitude
+                // Procedural rhythmic harmonic waveform amplitude (bouncy)
                 val seedOffset = (trackSeed % 1000).toDouble() / 100.0
-                val wavePhase = i * 0.28 + seedOffset
-                val normalizedAmp = (0.25f + 0.65f * abs(sin(wavePhase) * sin(wavePhase * 0.5f))).toFloat()
-                val barHeight = (height * 0.55f * normalizedAmp).coerceAtLeast(4.dp.toPx())
+                val beatPhase = displayTimeMs.toDouble() / 250.0 // Fast rhythmic pulse
+                val wavePhase = i * 0.28 + seedOffset + beatPhase * 0.5
+                val beatBounce = abs(kotlin.math.sin(beatPhase - i * 0.1))
+                val normalizedAmp = (0.15f + 0.85f * abs(kotlin.math.sin(wavePhase) * kotlin.math.sin(wavePhase * 0.5)) * beatBounce).toFloat()
+                val barHeight = (height * 0.65f * normalizedAmp).coerceAtLeast(4.dp.toPx())
                 val topY = centerY - barHeight / 2f
 
                 val isPassed = tickX <= progressX
@@ -208,14 +211,14 @@ fun TimelineCanvas(
         ) {
             Text(
                 text = formatDuration(displayTimeMs),
-                color = if (isDragging) accentColor else TextSecondary,
+                color = if (isDragging) accentColor else AppTheme.colors.textSecondary,
                 fontSize = 12.sp,
                 fontWeight = if (isDragging) FontWeight.Bold else FontWeight.Medium,
                 fontFamily = FontFamily.Monospace
             )
             Text(
                 text = formatDuration(totalDuration),
-                color = TextMuted,
+                color = AppTheme.colors.textMuted,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Normal,
                 fontFamily = FontFamily.Monospace

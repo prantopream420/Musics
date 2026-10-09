@@ -37,9 +37,10 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.data.local.TrackEntity
+import com.example.ui.theme.AppTheme
 import com.example.ui.theme.NeonCyan
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
+
+
 
 @Composable
 fun MiniPlayerBar(
@@ -131,7 +132,7 @@ fun MiniPlayerBar(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = currentTrack.title,
-                        color = TextPrimary,
+                        color = AppTheme.colors.textPrimary,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -145,7 +146,7 @@ fun MiniPlayerBar(
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = currentTrack.artist,
-                            color = TextSecondary,
+                            color = AppTheme.colors.textSecondary,
                             fontSize = 11.5.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -182,7 +183,7 @@ fun MiniPlayerBar(
                     Icon(
                         imageVector = Icons.Default.SkipNext,
                         contentDescription = "Next",
-                        tint = TextPrimary,
+                        tint = AppTheme.colors.textPrimary,
                         modifier = Modifier.size(22.dp)
                     )
                 }

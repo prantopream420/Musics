@@ -10,7 +10,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.getValue
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.player.MusicsPlaybackService
 import com.example.ui.MusicPlayerViewModel
@@ -37,9 +39,10 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            MyApplicationTheme {
-                val viewModel: MusicPlayerViewModel = viewModel()
+            val viewModel: MusicPlayerViewModel = viewModel()
+            val isDarkMode by viewModel.isDarkMode.collectAsStateWithLifecycle()
 
+            MyApplicationTheme(isDarkMode = isDarkMode) {
                 // Permission request launcher for MediaStore access
                 val permissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestPermission()

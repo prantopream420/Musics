@@ -75,10 +75,11 @@ import com.example.ui.components.FrostedGlassBox
 import com.example.ui.components.LiquidGlassBackground
 import com.example.ui.components.MiniPlayerBar
 import com.example.ui.components.TrackItemView
+import com.example.ui.theme.AppTheme
 import com.example.ui.theme.NeonCyan
-import com.example.ui.theme.TextMuted
-import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
+
+
+
 
 @Composable
 fun MainScreen(
@@ -104,6 +105,7 @@ fun MainScreen(
     val scanState by viewModel.scanState.collectAsStateWithLifecycle()
     val isProUnlocked by viewModel.isProUnlocked.collectAsStateWithLifecycle()
     val otaStatus by viewModel.otaStatus.collectAsStateWithLifecycle()
+    val isDarkMode by viewModel.isDarkMode.collectAsStateWithLifecycle()
 
     val isNowPlayingExpanded by viewModel.isNowPlayingExpanded.collectAsStateWithLifecycle()
     val isSettingsOpen by viewModel.isSettingsOpen.collectAsStateWithLifecycle()
@@ -183,7 +185,7 @@ fun MainScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
                                     text = "Musics",
-                                    color = TextPrimary,
+                                    color = AppTheme.colors.textPrimary,
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Black,
                                     letterSpacing = 0.5.sp
@@ -205,7 +207,7 @@ fun MainScreen(
                             }
                             Text(
                                 text = sortOrder.label,
-                                color = TextMuted,
+                                color = AppTheme.colors.textMuted,
                                 fontSize = 11.sp
                             )
                         }
@@ -220,7 +222,7 @@ fun MainScreen(
                             Icon(
                                 imageVector = if (isSearchVisible) Icons.Default.Close else Icons.Default.Search,
                                 contentDescription = "Search",
-                                tint = if (isSearchVisible || searchQuery.isNotEmpty()) palette.primary else TextPrimary
+                                tint = if (isSearchVisible || searchQuery.isNotEmpty()) palette.primary else AppTheme.colors.textPrimary
                             )
                         }
 
@@ -231,7 +233,7 @@ fun MainScreen(
                             Icon(
                                 imageVector = Icons.Default.Sort,
                                 contentDescription = "Sort Menu",
-                                tint = TextPrimary
+                                tint = AppTheme.colors.textPrimary
                             )
                         }
 
@@ -242,7 +244,7 @@ fun MainScreen(
                             Icon(
                                 imageVector = Icons.Default.Settings,
                                 contentDescription = "Settings",
-                                tint = TextPrimary
+                                tint = AppTheme.colors.textPrimary
                             )
                         }
                     }
@@ -251,8 +253,20 @@ fun MainScreen(
                 // Expandable Search Bar
                 AnimatedVisibility(
                     visible = isSearchVisible,
-                    enter = fadeIn() + slideInVertically(),
-                    exit = fadeOut() + slideOutVertically()
+                    enter = fadeIn(animationSpec = androidx.compose.animation.core.tween(300)) + slideInVertically(
+                        initialOffsetY = { -it },
+                        animationSpec = androidx.compose.animation.core.spring(
+                            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                            stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+                        )
+                    ),
+                    exit = fadeOut(animationSpec = androidx.compose.animation.core.tween(200)) + slideOutVertically(
+                        targetOffsetY = { -it },
+                        animationSpec = androidx.compose.animation.core.spring(
+                            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioNoBouncy,
+                            stiffness = androidx.compose.animation.core.Spring.StiffnessMedium
+                        )
+                    )
                 ) {
                     Box(
                         modifier = Modifier
@@ -269,8 +283,8 @@ fun MainScreen(
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedBorderColor = palette.primary,
                                 unfocusedBorderColor = Color(0x3394A3B8),
-                                focusedTextColor = TextPrimary,
-                                unfocusedTextColor = TextPrimary
+                                focusedTextColor = AppTheme.colors.textPrimary,
+                                unfocusedTextColor = AppTheme.colors.textPrimary
                             ),
                             singleLine = true,
                             shape = RoundedCornerShape(12.dp)
@@ -302,7 +316,7 @@ fun MainScreen(
                                     text = tab.label,
                                     fontSize = 13.5.sp,
                                     fontWeight = if (selectedTab == tab) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (selectedTab == tab) palette.primary else TextSecondary
+                                    color = if (selectedTab == tab) palette.primary else AppTheme.colors.textSecondary
                                 )
                             },
                             modifier = Modifier.testTag("tab_${tab.name.lowercase()}")
@@ -322,7 +336,7 @@ fun MainScreen(
                 ) {
                     Text(
                         text = "${tracks.size} TRACKS • ${if (scanSettings.bypass60SecondRule) "ALL SIZES" else "FILTERED (>60s)"}",
-                        color = TextMuted,
+                        color = AppTheme.colors.textMuted,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         letterSpacing = 0.5.sp
@@ -382,14 +396,14 @@ fun MainScreen(
                                 Spacer(modifier = Modifier.height(14.dp))
                                 Text(
                                     text = "No Audio Tracks In This View",
-                                    color = TextPrimary,
+                                    color = AppTheme.colors.textPrimary,
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
                                     text = "Run Smart Scan to query device storage or adjust your 60-second junk filtering criteria.",
-                                    color = TextSecondary,
+                                    color = AppTheme.colors.textSecondary,
                                     fontSize = 12.5.sp,
                                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                 )
@@ -465,7 +479,13 @@ fun MainScreen(
             // Slide-out Contextual Sorting Side Drawer Overlay
             AnimatedVisibility(
                 visible = isSortDrawerOpen,
-                enter = slideInHorizontally(initialOffsetX = { -it }) + fadeIn(),
+                enter = slideInHorizontally(
+                    initialOffsetX = { -it },
+                    animationSpec = androidx.compose.animation.core.spring(
+                        dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                        stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+                    )
+                ) + fadeIn(),
                 exit = slideOutHorizontally(targetOffsetX = { -it }) + fadeOut()
             ) {
                 Box(
@@ -486,7 +506,13 @@ fun MainScreen(
             // Full-Screen Settings & V2 Roadmap Screen Overlay
             AnimatedVisibility(
                 visible = isSettingsOpen,
-                enter = slideInHorizontally(initialOffsetX = { it }) + fadeIn(),
+                enter = slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = androidx.compose.animation.core.spring(
+                        dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                        stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+                    )
+                ) + fadeIn(),
                 exit = slideOutHorizontally(targetOffsetX = { it }) + fadeOut()
             ) {
                 SettingsAndRoadmapSheet(
@@ -508,14 +534,22 @@ fun MainScreen(
                     },
                     onCheckOta = {
                         viewModel.checkGitHubOtaUpdate()
-                    }
+                    },
+                    isDarkMode = isDarkMode,
+                    onToggleDarkMode = { viewModel.toggleDarkMode() }
                 )
             }
 
             // Full-Screen Liquid Glass Now Playing Overlay
             AnimatedVisibility(
                 visible = isNowPlayingExpanded,
-                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = androidx.compose.animation.core.spring(
+                        dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                        stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+                    )
+                ) + fadeIn(),
                 exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
             ) {
                 NowPlayingSheet(
