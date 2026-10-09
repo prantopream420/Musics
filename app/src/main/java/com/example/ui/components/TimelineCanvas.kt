@@ -119,7 +119,7 @@ fun TimelineCanvas(
                 val tickX = i * tickGap + tickGap / 2f
                 // Procedural rhythmic harmonic waveform amplitude (bouncy)
                 val seedOffset = (trackSeed % 1000).toDouble() / 100.0
-                val beatPhase = displayTimeMs.toDouble() / 250.0 // Fast rhythmic pulse
+                val beatPhase = positionMs.toDouble() / 250.0 // Fast rhythmic pulse
                 val wavePhase = i * 0.28 + seedOffset + beatPhase * 0.5
                 val beatBounce = abs(kotlin.math.sin(beatPhase - i * 0.1))
                 val normalizedAmp = (0.15f + 0.85f * abs(kotlin.math.sin(wavePhase) * kotlin.math.sin(wavePhase * 0.5)) * beatBounce).toFloat()

@@ -41,6 +41,13 @@ class MusicsPlaybackService : MediaSessionService() {
     companion object {
         const val CHANNEL_ID = "musics_playback_channel"
         const val ACTION_QUIT = "com.example.ACTION_QUIT"
+
+        @Volatile
+        var instance: MusicsPlaybackService? = null
+            private set
+
+        fun getExoPlayer(): ExoPlayer? = instance?.player
+        fun getMediaSession(): MediaSession? = instance?.mediaSession
     }
 
     private var mediaSession: MediaSession? = null
@@ -146,12 +153,4 @@ class MusicsPlaybackService : MediaSessionService() {
 
     // ─── Shared instance access ──────────────────────────────────────────────
 
-    companion object {
-        @Volatile
-        var instance: MusicsPlaybackService? = null
-            private set
-
-        fun getExoPlayer(): ExoPlayer? = instance?.player
-        fun getMediaSession(): MediaSession? = instance?.mediaSession
-    }
 }
