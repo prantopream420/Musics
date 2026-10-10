@@ -19,20 +19,27 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import com.example.ui.theme.DynamicPaletteColors
+import kotlin.math.abs
+import kotlin.math.sin
 
 /**
  * Liquid Glass UI:
  * Renders a deeply blurred, full-screen background surface with fluid gradients
- * extracted dynamically from the current track's album art / palette.
+ * extracted dynamically from the current track's album art / palette, plus a
+ * blurry colorful equalizer animation running under the whole UI elements layer.
  */
 @Composable
 fun LiquidGlassBackground(
     palette: DynamicPaletteColors,
+    isDarkMode: Boolean = true,
+    isPlaying: Boolean = false,
+    positionMs: Long = 0L,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
+    val targetBg = if (isDarkMode) palette.background else Color(0xFFF8FAFC)
     val animatedBg by animateColorAsState(
-        targetValue = palette.background,
+        targetValue = targetBg,
         animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing),
         label = "bgColor"
     )
@@ -58,6 +65,16 @@ fun LiquidGlassBackground(
         label = "liquidWave"
     )
 
+    val beatPulse by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(if (isPlaying) 500 else 2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "beatPulse"
+    )
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -67,7 +84,20 @@ fun LiquidGlassBackground(
             val width = size.width
             val height = size.height
 
-            // Deep blurred ambient mesh orbs
+            if (!isDarkMode) {
+                // Gradient off-white background in light mode
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFF8FAFC),
+                            Color(0xFFEDF2F7),
+                            Color(0xFFE2E8F0)
+                        )
+                    )
+                )
+            }
+
+            // Deep blurred ambient mesh orbs & Equalizer beats layer sitting under UI
             val orb1Center = Offset(
                 x = width * (0.25f + 0.15f * animOffset),
                 y = height * (0.2f + 0.1f * animOffset)
@@ -81,12 +111,14 @@ fun LiquidGlassBackground(
                 y = height * (0.85f - 0.1f * animOffset)
             )
 
+            val alphaMultiplier = if (isDarkMode) 1f else 0.5f
+
             // Orb 1: Primary vibrant glow
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        animatedPrimary.copy(alpha = 0.35f),
-                        animatedPrimary.copy(alpha = 0.12f),
+                        animatedPrimary.copy(alpha = 0.35f * alphaMultiplier * beatPulse),
+                        animatedPrimary.copy(alpha = 0.12f * alphaMultiplier),
                         Color.Transparent
                     ),
                     center = orb1Center,
@@ -100,8 +132,8 @@ fun LiquidGlassBackground(
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(
-                        animatedSecondary.copy(alpha = 0.28f),
-                        animatedSecondary.copy(alpha = 0.08f),
+                        animatedSecondary.copy(alpha = 0.28f * alphaMultiplier * (1.2f - beatPulse)),
+                        animatedSecondary.copy(alpha = 0.08f * alphaMultiplier),
                         Color.Transparent
                     ),
                     center = orb2Center,
@@ -111,30 +143,41 @@ fun LiquidGlassBackground(
                 radius = width * 0.95f
             )
 
-            // Orb 3: Subtle bottom atmospheric glow
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        animatedPrimary.copy(alpha = 0.2f),
-                        Color.Transparent
-                    ),
-                    center = orb3Center,
-                    radius = width * 0.7f
-                ),
-                center = orb3Center,
-                radius = width * 0.7f
-            )
+            // Blurry Colorful Equalizer / Beat Waves under UI elements layer
+            val barCount = 20
+            val barWidth = width / barCount
+            for (i in 0 until barCount) {
+                val freqFactor = sin((i + animOffset * 12f + positionMs / 200.0).toDouble()).toFloat()
+                val heightMultiplier = if (isPlaying) (0.35f + 0.65f * abs(freqFactor) * beatPulse) else 0.12f
+                val barHeight = height * 0.5f * heightMultiplier
+                val x = i * barWidth + barWidth / 2f
+                val y = height - barHeight
 
-            // Overall obsidian dark vignette overlay for glass clarity
-            drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0x990A0E17),
-                        Color(0x660A0E17),
-                        Color(0xCC070B12)
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            animatedPrimary.copy(alpha = if (isDarkMode) 0.35f else 0.22f),
+                            animatedSecondary.copy(alpha = if (isDarkMode) 0.55f else 0.35f)
+                        )
+                    ),
+                    topLeft = Offset(x - barWidth * 0.4f, y),
+                    size = androidx.compose.ui.geometry.Size(barWidth * 0.8f, barHeight)
+                )
+            }
+
+            if (isDarkMode) {
+                // Overall obsidian dark vignette overlay for glass clarity in dark mode
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0x990A0E17),
+                            Color(0x660A0E17),
+                            Color(0xCC070B12)
+                        )
                     )
                 )
-            )
+            }
         }
 
         content()

@@ -1,6 +1,12 @@
 package com.example.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -53,8 +59,19 @@ fun TrackItemView(
     onFavoriteToggle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val infiniteTransition = rememberInfiniteTransition(label = "trackGlow")
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 0.9f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glowAlpha"
+    )
+
     val containerBg by animateColorAsState(
-        targetValue = if (isPlayingThis) Color(0x3300F2FE) else Color(0x1F1E293B),
+        targetValue = if (isPlayingThis) Color(0x77060F1E) else Color(0x1F1E293B),
         label = "trackBg"
     )
 
@@ -63,7 +80,7 @@ fun TrackItemView(
             .fillMaxWidth()
             .testTag("track_item_${track.id}"),
         backgroundColor = containerBg,
-        borderColor = if (isPlayingThis) NeonCyan.copy(alpha = 0.5f) else Color(0x2494A3B8),
+        borderColor = if (isPlayingThis) NeonCyan.copy(alpha = glowAlpha) else Color(0x2494A3B8),
         shape = RoundedCornerShape(14.dp),
         onClick = onTrackClick
     ) {

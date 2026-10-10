@@ -56,6 +56,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.local.TrackEntity
 import com.example.data.model.ScanSettings
 import com.example.data.repository.ScanState
 import com.example.ui.components.FrostedGlassBox
@@ -77,6 +78,8 @@ fun SettingsAndRoadmapSheet(
     isProUnlocked: Boolean,
     otaStatus: String?,
     palette: DynamicPaletteColors,
+    currentTrack: TrackEntity?,
+    isPlaying: Boolean,
     onClose: () -> Unit,
     onUpdateScanSettings: (Boolean, Boolean) -> Unit,
     onTriggerScan: () -> Unit,
@@ -291,27 +294,37 @@ fun SettingsAndRoadmapSheet(
                     DecoderRow(
                         label = "Backend Engine",
                         value = "AndroidX Media3 ExoPlayer",
-                        status = "Hardware Accelerated"
+                        status = if (isPlaying) "Active / Streaming" else "Ready (Idle)",
+                        statusColor = if (isPlaying) HighResGreen else NeonCyan,
+                        statusBg = if (isPlaying) Color(0x1F10B981) else Color(0x1F00F2FE)
                     )
                     DecoderRow(
                         label = "Playback Service",
                         value = "MusicsPlaybackService (Foreground)",
-                        status = "Active"
+                        status = if (isPlaying) "Foreground Active" else "Bound",
+                        statusColor = HighResGreen,
+                        statusBg = Color(0x1F10B981)
                     )
                     DecoderRow(
                         label = "Metadata Inspector",
-                        value = "MediaMetadataRetriever + Room Cache",
-                        status = "Active"
+                        value = currentTrack?.let { "${it.title} (${it.format})" } ?: "Room + Retriever Ready",
+                        status = if (currentTrack != null) "Parsed" else "Standby",
+                        statusColor = NeonCyan,
+                        statusBg = Color(0x1F00F2FE)
                     )
                     DecoderRow(
                         label = "Supported Formats",
                         value = "FLAC, WAV, ALAC, MP3, AAC, OGG",
-                        status = "Native Lossless"
+                        status = currentTrack?.format ?: "Native Lossless",
+                        statusColor = AudiophileGold,
+                        statusBg = Color(0x1FFFFD166)
                     )
                     DecoderRow(
                         label = "Max Supported Resolution",
-                        value = "24-bit / 192 kHz Stereo",
-                        status = "Audiophile Ready"
+                        value = if (currentTrack != null && currentTrack.sampleRateHz > 0) "${currentTrack.sampleRateHz / 1000} kHz / ${currentTrack.bitDepth}-bit" else "24-bit / 192 kHz Stereo",
+                        status = if (currentTrack?.isLossless == true) "Lossless Master" else "Audiophile Ready",
+                        statusColor = AudiophileGold,
+                        statusBg = Color(0x1FFFFD166)
                     )
                 }
             }
@@ -562,7 +575,13 @@ private fun ToggleRow(
 }
 
 @Composable
-private fun DecoderRow(label: String, value: String, status: String) {
+private fun DecoderRow(
+    label: String,
+    value: String,
+    status: String,
+    statusColor: Color = AudiophileGold,
+    statusBg: Color = Color(0x1FFFFD166)
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -577,10 +596,10 @@ private fun DecoderRow(label: String, value: String, status: String) {
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(6.dp))
-                .background(Color(0x1FFFFD166))
+                .background(statusBg)
                 .padding(horizontal = 8.dp, vertical = 3.dp)
         ) {
-            Text(text = status, color = AudiophileGold, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Text(text = status, color = statusColor, fontSize = 10.sp, fontWeight = FontWeight.Bold)
         }
     }
 }

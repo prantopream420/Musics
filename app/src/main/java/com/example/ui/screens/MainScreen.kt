@@ -139,6 +139,9 @@ fun MainScreen(
 
     LiquidGlassBackground(
         palette = palette,
+        isDarkMode = isDarkMode,
+        isPlaying = isPlaying,
+        positionMs = positionMs,
         modifier = modifier.fillMaxSize()
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -521,6 +524,8 @@ fun MainScreen(
                     isProUnlocked = isProUnlocked,
                     otaStatus = otaStatus,
                     palette = palette,
+                    currentTrack = currentTrack,
+                    isPlaying = isPlaying,
                     onClose = { viewModel.setSettingsOpen(false) },
                     onUpdateScanSettings = { bypass, include ->
                         viewModel.updateScanSettings(bypass, include)

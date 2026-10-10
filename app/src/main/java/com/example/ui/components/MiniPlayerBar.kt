@@ -1,5 +1,12 @@
 package com.example.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -22,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,14 +66,30 @@ fun MiniPlayerBar(
 
     val progressFraction = (positionMs.toFloat() / durationMs.coerceAtLeast(1L).toFloat()).coerceIn(0f, 1f)
 
+    val infiniteTransition = rememberInfiniteTransition(label = "miniPlayerGlow")
+    val glowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 0.9f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "glowAlpha"
+    )
+
+    val containerBg by animateColorAsState(
+        targetValue = if (isPlaying) Color(0x99060A10) else Color(0x3B141E30),
+        label = "miniPlayerBg"
+    )
+
     FrostedGlassBox(
         modifier = modifier
             .fillMaxWidth()
             .testTag("mini_player_bar")
             .clickable(onClick = onExpandNowPlaying),
         shape = RoundedCornerShape(20.dp),
-        backgroundColor = Color(0x3B141E30),
-        borderColor = Color(0x3D94A3B8)
+        backgroundColor = containerBg,
+        borderColor = if (isPlaying) accentColor.copy(alpha = glowAlpha) else Color(0x3D94A3B8)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             // Top Continuous 60fps Micro-Timeline Line

@@ -14,7 +14,7 @@ android {
   compileSdk = 34
 
   defaultConfig {
-    applicationId = "com.aistudio.musics.kflxrw"
+    applicationId = "com.ppream420.musics.kflxrw"
     minSdk = 24
     targetSdk = 34
     versionCode = 1

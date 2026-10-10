@@ -50,11 +50,11 @@ val DarkExtendedColors = ExtendedColors(
 
 // Light theme extended colors
 val LightExtendedColors = ExtendedColors(
-    textPrimary = Color(0xFF0F172A),
-    textSecondary = Color(0xFF334155),
-    textMuted = Color(0xFF64748B),
-    glassSurface = Color(0x33FFFFFF),
-    glassBorder = Color(0x40CBD5E1),
+    textPrimary = Color(0xFF000000),
+    textSecondary = Color(0xFF1E293B),
+    textMuted = Color(0xFF475569),
+    glassSurface = Color(0xCCFFFFFF),
+    glassBorder = Color(0x4094A3B8),
     background = Color(0xFFF8FAFC),
     surface = Color(0xFFE2E8F0)
 )
